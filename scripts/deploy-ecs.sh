@@ -3,11 +3,11 @@
 set -e
 
 # Configuration
-AWS_ACCOUNT_ID=${AWS_ACCOUNT_ID:-}
-AWS_REGION=${AWS_REGION:-us-east-1}
+AWS_ACCOUNT_ID=${AWS_ACCOUNT_ID:-296921411200}
+AWS_REGION=${AWS_REGION:-us-west-2}
 ECR_REPOSITORY_NAME="startup-dose-api"
-ECS_CLUSTER_NAME="startup-dose-cluster"
-ECS_SERVICE_NAME="startup-dose-api-service"
+ECS_CLUSTER_NAME=${ECS_CLUSTER_NAME:-unique-zebra-ow4l1t}
+ECS_SERVICE_NAME=${ECS_SERVICE_NAME:-startup-dose-api-service}
 ECS_TASK_FAMILY="startup-dose-api"
 IMAGE_TAG=${IMAGE_TAG:-latest}
 
@@ -32,7 +32,11 @@ print_warning() {
 
 # Validate inputs
 if [ -z "$AWS_ACCOUNT_ID" ]; then
-    print_error "AWS_ACCOUNT_ID is not set"
+    print_warning "AWS_ACCOUNT_ID not set, using default: ${AWS_ACCOUNT_ID}"
+fi
+
+if [ -z "$ECS_CLUSTER_NAME" ]; then
+    print_error "ECS_CLUSTER_NAME is not set"
     exit 1
 fi
 
