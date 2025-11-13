@@ -1,5 +1,8 @@
-# Markdown files
+# Markdown, YAML, and JSON files
 *.md
+*.yml
+*.yaml
+*.json
 
 # Binaries and build artifacts
 /bin/
