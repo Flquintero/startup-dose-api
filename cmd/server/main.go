@@ -25,19 +25,30 @@ func main() {
 		MaxHeaderBytes: 1 << 20,
 	}
 
+	// Channel for server errors
+	errChan := make(chan error, 1)
+
 	// Start server in a goroutine
 	go func() {
 		fmt.Printf("Server starting on %s\n", srv.Addr)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			fmt.Fprintf(os.Stderr, "Server error: %v\n", err)
-			os.Exit(1)
+			errChan <- err
 		}
 	}()
 
-	// Wait for interrupt signal
+	// Wait for interrupt signal or server error
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
-	<-sigChan
+
+	select {
+	case <-sigChan:
+		// Graceful shutdown on signal
+	case err := <-errChan:
+		// Server error occurred
+		fmt.Fprintf(os.Stderr, "Fatal server error: %v\n", err)
+		os.Exit(1)
+	}
 
 	// Graceful shutdown with timeout
 	fmt.Println("Shutting down gracefully...")
