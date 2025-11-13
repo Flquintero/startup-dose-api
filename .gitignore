@@ -5,11 +5,8 @@
 *.json
 *.sh
 
-# Exception: GitHub Actions workflows
-!.github/
-!.github/workflows/
-!.github/workflows/*.yml
-!.github/workflows/*.yaml
+# GitHub
+.github/
 
 # CloudFormation and scripts
 /cloudformation/
