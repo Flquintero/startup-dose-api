@@ -1,8 +1,9 @@
-# Markdown, YAML, and JSON files
+# Markdown, YAML, JSON, and shell script files
 *.md
 *.yml
 *.yaml
 *.json
+*.sh
 
 # Exception: GitHub Actions workflows
 !.github/
