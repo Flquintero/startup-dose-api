@@ -4,6 +4,12 @@
 *.yaml
 *.json
 
+# Exception: GitHub Actions workflows
+!.github/
+!.github/workflows/
+!.github/workflows/*.yml
+!.github/workflows/*.yaml
+
 # CloudFormation and scripts
 /cloudformation/
 /scripts/
