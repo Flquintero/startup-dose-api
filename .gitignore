@@ -4,6 +4,10 @@
 *.yaml
 *.json
 
+# CloudFormation and scripts
+/cloudformation/
+/scripts/
+
 # Binaries and build artifacts
 /bin/
 *.exe
