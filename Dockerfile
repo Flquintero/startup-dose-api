@@ -8,7 +8,7 @@ RUN go mod download 2>/dev/null || true
 
 COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o /app/server ./cmd/server
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /app/server ./cmd/server
 
 # Final stage
 FROM alpine:latest
