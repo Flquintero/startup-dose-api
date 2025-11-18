@@ -33,6 +33,9 @@
 .env.*.local
 .env.example
 
+# ECS task definition with secrets
+ecs-task-definition.json
+
 # Go dependencies and build cache
 vendor/
 go.sum
