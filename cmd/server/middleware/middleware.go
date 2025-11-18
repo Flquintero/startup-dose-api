@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -68,4 +69,40 @@ type responseWriter struct {
 func (rw *responseWriter) WriteHeader(statusCode int) {
 	rw.statusCode = statusCode
 	rw.ResponseWriter.WriteHeader(statusCode)
+}
+
+// APIKeyAuthMiddleware validates the x-api-key header against the configured API key
+// Returns a middleware function that can be used to wrap specific handlers
+func APIKeyAuthMiddleware(apiKey string) func(http.HandlerFunc) http.HandlerFunc {
+	return func(next http.HandlerFunc) http.HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) {
+			// Get the API key from the request header
+			providedKey := r.Header.Get("x-api-key")
+
+			// Check if API key is provided
+			if providedKey == "" {
+				w.Header().Set("Content-Type", "application/json; charset=utf-8")
+				w.WriteHeader(http.StatusUnauthorized)
+				json.NewEncoder(w).Encode(map[string]string{
+					"error":   "unauthorized",
+					"message": "API key is required",
+				})
+				return
+			}
+
+			// Validate the API key
+			if providedKey != apiKey {
+				w.Header().Set("Content-Type", "application/json; charset=utf-8")
+				w.WriteHeader(http.StatusUnauthorized)
+				json.NewEncoder(w).Encode(map[string]string{
+					"error":   "unauthorized",
+					"message": "Invalid API key",
+				})
+				return
+			}
+
+			// API key is valid, proceed to the next handler
+			next.ServeHTTP(w, r)
+		}
+	}
 }

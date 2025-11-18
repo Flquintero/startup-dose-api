@@ -3,21 +3,42 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
+	"github.com/joho/godotenv"
+	"startupdose.com/cmd/server/config"
+	"startupdose.com/cmd/server/database"
 	"startupdose.com/cmd/server/router"
-
 )
 
 func main() {
+	// Load .env file
+	if err := godotenv.Load(); err != nil {
+		log.Println("Warning: .env file not found, using environment variables")
+	}
+
+	// Load configuration
+	cfg := config.Load()
+
+	// Initialize Supabase client
+	if err := database.InitSupabase(cfg); err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to initialize Supabase: %v\n", err)
+		// Note: We continue even if Supabase fails to initialize
+		// This allows the server to run without Supabase if needed
+	}
+
+	// Ensure cleanup on exit
+	defer database.Close()
+
 	// Create HTTP server
-	mux := router.Setup()
+	mux := router.Setup(cfg)
 	srv := &http.Server{
-		Addr:           ":8080",
+		Addr:           ":" + cfg.Port,
 		Handler:        mux,
 		ReadTimeout:    15 * time.Second,
 		WriteTimeout:   15 * time.Second,
