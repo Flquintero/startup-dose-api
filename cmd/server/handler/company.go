@@ -71,17 +71,15 @@ Return your answer as a SINGLE JSON object with the following fields:
     This paragraph should be written so it can be reused almost directly as social media caption text.
 * "appeal": string
 
-  An HTML unordered list (<ul>...</ul>) containing EXACTLY five <li> bullet points explaining why we like this startup.
+  EXACTLY five HTML list items (<li>...</li>) explaining why we like this startup. DO NOT wrap them in a <ul> tag.
 
   Example shape (just for structure, NOT content):
 
-  "<ul>
-<li>Reason 1…</li>
+  "<li>Reason 1…</li>
 <li>Reason 2…</li>
 <li>Reason 3…</li>
 <li>Reason 4…</li>
-<li>Reason 5…</li>
-</ul>"
+<li>Reason 5…</li>"
 
 * Each bullet should be specific and compelling (traction, innovation, niche, team, product quality, etc.), written in a tone suitable for social media.
 * "linkedin": string
@@ -111,7 +109,7 @@ Important formatting rules:
 * Do NOT wrap the JSON in backticks or any other formatting.
 * Do NOT add any extra commentary or explanation outside of the JSON.
 * Exactly one startup per response.
-* Make sure the "appeal" field is a single string containing a valid <ul> with exactly five <li> items.
+* Make sure the "appeal" field is a single string containing exactly five <li> items WITHOUT any <ul> wrapper.
 
 Now select an appropriate, lesser-known, still-active tech startup and return the JSON object.`
 
@@ -378,6 +376,12 @@ func generateCompanyFromAI(apiKey string) (*CompanyFromAI, error) {
 		log.Printf("ERROR: Failed to unmarshal company JSON. Raw content: %s\n", content)
 		return nil, fmt.Errorf("failed to parse company JSON from OpenAI: %w", err)
 	}
+
+	// Post-process: Remove any <ul> or </ul> tags from the appeal field
+	// This ensures we only have <li> tags as required
+	company.Appeal = strings.ReplaceAll(company.Appeal, "<ul>", "")
+	company.Appeal = strings.ReplaceAll(company.Appeal, "</ul>", "")
+	company.Appeal = strings.TrimSpace(company.Appeal)
 
 	return &company, nil
 }
