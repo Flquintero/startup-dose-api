@@ -267,7 +267,7 @@ func GenerateCompaniesHandler(w http.ResponseWriter, r *http.Request) {
 	companyMap := map[string]interface{}{
 		"name":        companyData.Name,
 		"slug":        slug,
-		"website":     companyData.Website,
+		"website":     stripProtocol(companyData.Website),
 		"cover_image": coverImageURL,
 		"description": companyData.Description,
 		"appeal":      companyData.Appeal,
@@ -400,4 +400,11 @@ func generateSlug(name string) string {
 	slug = strings.Trim(slug, "-")
 
 	return slug
+}
+
+// stripProtocol removes http:// or https:// from a URL
+func stripProtocol(url string) string {
+	url = strings.TrimPrefix(url, "https://")
+	url = strings.TrimPrefix(url, "http://")
+	return url
 }
