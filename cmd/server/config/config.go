@@ -38,6 +38,12 @@ type Config struct {
 
 	// ScreenshotOne API
 	ScreenshotOneAPIKey string
+
+	// Instagram API
+	IGUserID         string
+	IGAccessToken    string
+	IGAPIVersion     string
+	IGPostingEnabled bool
 }
 
 // Load reads configuration from environment variables
@@ -74,6 +80,12 @@ func Load() *Config {
 
 		// ScreenshotOne API
 		ScreenshotOneAPIKey: getEnv("SCREENSHOTONE_API_KEY", ""),
+
+		// Instagram API
+		IGUserID:         getEnv("IG_USER_ID", ""),
+		IGAccessToken:    getEnv("IG_ACCESS_TOKEN", ""),
+		IGAPIVersion:     getEnv("IG_API_VERSION", "v23.0"),
+		IGPostingEnabled: getEnv("IG_POSTING_ENABLED", "true") == "true",
 	}
 
 	// Validate required Supabase credentials

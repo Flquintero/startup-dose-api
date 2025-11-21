@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"startupdose.com/cmd/server/database"
+	"startupdose.com/cmd/server/instagram"
 	"startupdose.com/cmd/server/models"
 	"startupdose.com/cmd/server/storage"
 )
@@ -141,6 +142,14 @@ type CompanyFromAI struct {
 	Instagram   string `json:"instagram"`
 	Facebook    string `json:"facebook"`
 	Twitter     string `json:"twitter"`
+}
+
+// GenerateCompanyResponse represents the response from the generate endpoint
+type GenerateCompanyResponse struct {
+	*models.Company
+	InstagramPosted  bool   `json:"instagram_posted"`
+	InstagramMediaID string `json:"instagram_media_id,omitempty"`
+	InstagramError   string `json:"instagram_error,omitempty"`
 }
 
 // CompanyLatestHandler handles GET /companies/latest
@@ -302,10 +311,59 @@ func GenerateCompaniesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Success - return the created company
+	// Prepare response with Instagram status
+	response := GenerateCompanyResponse{
+		Company:         createdCompany,
+		InstagramPosted: false,
+	}
+
+	// Post to Instagram if enabled and configured
+	igUserID := os.Getenv("IG_USER_ID")
+	igAccessToken := os.Getenv("IG_ACCESS_TOKEN")
+	igAPIVersion := os.Getenv("IG_API_VERSION")
+	igPostingEnabled := os.Getenv("IG_POSTING_ENABLED") != "false" // default true
+
+	if igPostingEnabled && igUserID != "" && igAccessToken != "" && coverImageURL != "" {
+		igClient := instagram.NewClient(igUserID, igAccessToken, igAPIVersion)
+
+		// Build caption from company data
+		// Use the original website with protocol for the caption link
+		websiteForCaption := companyData.Website
+		if websiteForCaption == "" {
+			websiteForCaption = "startupdose.com"
+		}
+		caption := instagram.BuildCaption(
+			companyData.Name,
+			companyData.Description,
+			companyData.Appeal,
+			websiteForCaption,
+		)
+
+		// Post to Instagram
+		ctx := r.Context()
+		result, err := igClient.PublishPost(ctx, coverImageURL, caption)
+		if err != nil {
+			log.Printf("ERROR: Instagram posting failed: %v\n", err)
+			response.InstagramError = err.Error()
+		} else if result != nil {
+			response.InstagramPosted = result.Posted
+			response.InstagramMediaID = result.MediaID
+			if result.Error != "" {
+				response.InstagramError = result.Error
+				log.Printf("WARNING: Instagram posting issue: %s\n", result.Error)
+			}
+		}
+	} else if igPostingEnabled && (igUserID == "" || igAccessToken == "") {
+		log.Println("WARNING: Instagram posting enabled but credentials not configured")
+		response.InstagramError = "Instagram credentials not configured"
+	} else if !igPostingEnabled {
+		log.Println("INFO: Instagram posting disabled")
+	}
+
+	// Success - return the created company with Instagram status
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(createdCompany)
+	json.NewEncoder(w).Encode(response)
 }
 
 // generateCompanyFromAI calls the OpenAI API to generate a startup company
